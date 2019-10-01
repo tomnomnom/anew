@@ -8,12 +8,13 @@ import (
 )
 
 func main() {
+	// override default usage
+	anewUsage(flag.CommandLine)
 	flag.Parse()
 
 	fn := flag.Arg(0)
 	if fn == "" {
-		fmt.Println("usage: anew <file>")
-		os.Exit(1)
+		anewUsage(flag.CommandLine)
 	}
 
 	lines := make(map[string]bool)
@@ -51,4 +52,9 @@ func main() {
 		fmt.Println(line)
 		f.WriteString(line + "\n")
 	}
+}
+
+func anewUsage(f *flag.FlagSet) {
+	fmt.Printf("usage: %s <file>", os.Args[0])
+	os.Exit(1)
 }
