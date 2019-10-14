@@ -16,7 +16,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	lines := make(map[string]struct{})
+	lines := make(map[string]bool)
 
 	// read the whole file into a map if it exists
 	f, err := os.Open(fn)
@@ -24,7 +24,7 @@ func main() {
 		sc := bufio.NewScanner(f)
 
 		for sc.Scan() {
-			lines[sc.Text()] = struct{}{}
+			lines[sc.Text()] = true
 		}
 		f.Close()
 	}
@@ -46,7 +46,7 @@ func main() {
 		}
 
 		// add the line to the map so we don't get any duplicates from stdin
-		lines[line] = struct{}{}
+		lines[line] = true
 
 		fmt.Println(line)
 		f.WriteString(line + "\n")
