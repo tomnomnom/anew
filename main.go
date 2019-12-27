@@ -9,6 +9,8 @@ import (
 )
 
 func main() {
+	var quietMode bool
+	flag.BoolVar(&quietMode, "q", false, "quiet mode (no output at all)")
 	flag.Parse()
 
 	fn := flag.Arg(0)
@@ -50,7 +52,9 @@ func main() {
 		// add the line to the map so we don't get any duplicates from stdin
 		lines[line] = true
 
-		fmt.Println(line)
+		if !quietMode {
+			fmt.Println(line)
+		}
 		if fn != "" {
 			fmt.Fprintf(f, "%s\n", line)
 		}
