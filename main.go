@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"./anewlib"
+	"github.com/manasmbellani/anew/anewlib"
 )
 
 func main() {
