@@ -8,13 +8,24 @@ import (
 	"os"
 )
 
-func main() {
-	var quietMode bool
-	flag.BoolVar(&quietMode, "q", false, "quiet mode (no output at all)")
-	flag.Parse()
+// appendDisplayLine - Choose to add the line `line`, if required to a file `fn`
+func appendDisplayLine(f io.WriteCloser, fn string, line string, lines map[string]bool, quietMode bool) {
+	// add the line to the map so we don't get any duplicates from stdin
+	lines[line] = true
 
-	fn := flag.Arg(0)
+	if !quietMode {
+		fmt.Println(line)
+	}
+	if fn != "" {
+		fmt.Fprintf(f, "%s\n", line)
+	}
+}
 
+// Anew - A public function which will append new lines `nl` provided as input
+// to file `fn`. If quietMode `quietMode` enabled, then do not print lines to
+// stdout. If `readFromStdin` is set to true, then lines to append will be read
+// from stdin instead of `nl`
+func Anew(nl []string, fn string, quietMode bool, readFromStdin bool) {
 	lines := make(map[string]bool)
 
 	var f io.WriteCloser
@@ -41,22 +52,31 @@ func main() {
 	}
 
 	// read the lines, append and output them if they're new
-	sc := bufio.NewScanner(os.Stdin)
+	if readFromStdin {
+		sc := bufio.NewScanner(os.Stdin)
+		for sc.Scan() {
+			l := sc.Text()
+			if lines[l] {
+				continue
+			}
 
-	for sc.Scan() {
-		line := sc.Text()
-		if lines[line] {
-			continue
+			appendDisplayLine(f, fn, l, lines, quietMode)
+		}
+	} else {
+
+		for l := range lines {
+			appendDisplayLine(f, fn, l, lines, quietMode)
 		}
 
-		// add the line to the map so we don't get any duplicates from stdin
-		lines[line] = true
-
-		if !quietMode {
-			fmt.Println(line)
-		}
-		if fn != "" {
-			fmt.Fprintf(f, "%s\n", line)
-		}
 	}
+}
+
+func main() {
+	var quietMode bool
+	flag.BoolVar(&quietMode, "q", false, "quiet mode (no output at all)")
+	flag.Parse()
+
+	fn := flag.Arg(0)
+
+	Anew(nil, fn, quietMode, true)
 }
