@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"./anew"
+	"./anewlib"
 )
 
 func main() {
@@ -13,5 +13,5 @@ func main() {
 
 	fn := flag.Arg(0)
 
-	anew.Anew(nil, fn, quietMode, true)
+	anewlib.Anew(nil, fn, quietMode, true)
 }

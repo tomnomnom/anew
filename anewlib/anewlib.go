@@ -1,4 +1,4 @@
-package anew
+package anewlib
 
 import (
 	"bufio"
