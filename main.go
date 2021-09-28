@@ -10,7 +10,9 @@ import (
 
 func main() {
 	var quietMode bool
+	var dryRun bool
 	flag.BoolVar(&quietMode, "q", false, "quiet mode (no output at all)")
+	flag.BoolVar(&dryRun, "d", false, "don't append anything to the file, just print the new lines to stdout")
 	flag.Parse()
 
 	fn := flag.Arg(0)
@@ -31,13 +33,15 @@ func main() {
 			r.Close()
 		}
 
-		// re-open the file for appending new stuff
-		f, err = os.OpenFile(fn, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed to open file for writing: %s\n", err)
-			return
+		if !dryRun {
+			// re-open the file for appending new stuff
+			f, err = os.OpenFile(fn, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "failed to open file for writing: %s\n", err)
+				return
+			}
+			defer f.Close()
 		}
-		defer f.Close()
 	}
 
 	// read the lines, append and output them if they're new
@@ -55,8 +59,10 @@ func main() {
 		if !quietMode {
 			fmt.Println(line)
 		}
-		if fn != "" {
-			fmt.Fprintf(f, "%s\n", line)
+		if !dryRun {
+			if fn != "" {
+				fmt.Fprintf(f, "%s\n", line)
+			}
 		}
 	}
 }
