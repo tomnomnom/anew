@@ -45,6 +45,10 @@ Three
 Four
 ```
 
+If you want to view the output in stdout, but not append to the file, use the dry-run option `-d`.
+If you want to append to the file, but not print anything to stdout, use quiet mode `-q`.
+
+
 ## Install
 
 ```
