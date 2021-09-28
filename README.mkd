@@ -45,6 +45,11 @@ Three
 Four
 ```
 
+## Flags
+
+- To view the output in stdout, but not append to the file, use the dry-run option `-d`.
+- To append to the file, but not print anything to stdout, use quiet mode `-q`.
+
 ## Install
 
 ```
