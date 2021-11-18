@@ -6,13 +6,16 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 func main() {
 	var quietMode bool
 	var dryRun bool
+	var trim bool
 	flag.BoolVar(&quietMode, "q", false, "quiet mode (no output at all)")
 	flag.BoolVar(&dryRun, "d", false, "don't append anything to the file, just print the new lines to stdout")
+	flag.BoolVar(&trim, "t", false, "trim leading and trailing whitespace before comparison")
 	flag.Parse()
 
 	fn := flag.Arg(0)
@@ -28,7 +31,11 @@ func main() {
 			sc := bufio.NewScanner(r)
 
 			for sc.Scan() {
-				lines[sc.Text()] = true
+				if trim {
+					lines[strings.TrimSpace(sc.Text())] = true
+				} else {
+					lines[sc.Text()] = true
+				}
 			}
 			r.Close()
 		}
@@ -49,6 +56,9 @@ func main() {
 
 	for sc.Scan() {
 		line := sc.Text()
+		if trim {
+			line = strings.TrimSpace(line)
+		}
 		if lines[line] {
 			continue
 		}
