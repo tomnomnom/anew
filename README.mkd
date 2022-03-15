@@ -53,5 +53,5 @@ Four
 ## Install
 
 ```
-▶ go get -u github.com/tomnomnom/anew
+go install -v github.com/tomnomnom/anew@latest
 ```
