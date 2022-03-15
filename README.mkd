@@ -52,6 +52,10 @@ Four
 
 ## Install
 
+You can either install using go:
+
 ```
 go install -v github.com/tomnomnom/anew@latest
 ```
+
+Or download a [binary release](https://github.com/tomnomnom/anew/releases) for your platform.
