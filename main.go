@@ -1,78 +1,89 @@
 package main
 
 import (
-	"bufio"
-	"flag"
-	"fmt"
-	"io"
-	"os"
-	"strings"
+        "bufio"
+        "flag"
+        "fmt"
+        "io"
+        "os"
+        "strings"
 )
 
 func main() {
-	var quietMode bool
-	var dryRun bool
-	var trim bool
-	flag.BoolVar(&quietMode, "q", false, "quiet mode (no output at all)")
-	flag.BoolVar(&dryRun, "d", false, "don't append anything to the file, just print the new lines to stdout")
-	flag.BoolVar(&trim, "t", false, "trim leading and trailing whitespace before comparison")
-	flag.Parse()
+        var quietMode bool
+        var dryRun bool
+        var trim bool
+        var outputFile string
 
-	fn := flag.Arg(0)
+        flag.BoolVar(&quietMode, "q", false, "quiet mode (no output at all)")
+        flag.BoolVar(&dryRun, "d", false, "don't append anything to the file, just print the new lines to stdout")
+        flag.BoolVar(&trim, "t", false, "trim leading and trailing whitespace before comparison")
+        flag.StringVar(&outputFile, "o", "", "specify the output file to write to if the line does not exist in any of the input files")
+        flag.Parse()
 
-	lines := make(map[string]bool)
+        // Initialize a map for each file.
+        lines := make(map[string]map[string]bool)
+        filenames := flag.Args()
+        var outputWriter io.WriteCloser
 
-	var f io.WriteCloser
+        if outputFile != "" && !dryRun {
+                var err error
+                outputWriter, err = os.OpenFile(outputFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+                if err != nil {
+                        fmt.Fprintf(os.Stderr, "failed to open output file for writing: %s\n", err)
+                        return
+                }
+                defer outputWriter.Close()
+        }
 
-	if fn != "" {
-		// read the whole file into a map if it exists
-		r, err := os.Open(fn)
-		if err == nil {
-			sc := bufio.NewScanner(r)
+        for _, fn := range filenames {
+                lines[fn] = make(map[string]bool)
 
-			for sc.Scan() {
-				if trim {
-					lines[strings.TrimSpace(sc.Text())] = true
-				} else {
-					lines[sc.Text()] = true
-				}
-			}
-			r.Close()
-		}
+                // read the whole file into a map if it exists
+                r, err := os.Open(fn)
+                if err == nil {
+                        sc := bufio.NewScanner(r)
 
-		if !dryRun {
-			// re-open the file for appending new stuff
-			f, err = os.OpenFile(fn, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "failed to open file for writing: %s\n", err)
-				return
-			}
-			defer f.Close()
-		}
-	}
+                        for sc.Scan() {
+                                if trim {
+                                        lines[fn][strings.TrimSpace(sc.Text())] = true
+                                } else {
+                                        lines[fn][sc.Text()] = true
+                                }
+                        }
+                        r.Close()
+                }
+        }
 
-	// read the lines, append and output them if they're new
-	sc := bufio.NewScanner(os.Stdin)
+        // read the lines, append and output them if they're new
+        sc := bufio.NewScanner(os.Stdin)
 
-	for sc.Scan() {
-		line := sc.Text()
-		if trim {
-			line = strings.TrimSpace(line)
-		}
-		if lines[line] {
-			continue
-		}
+        for sc.Scan() {
+                line := sc.Text()
+                if trim {
+                        line = strings.TrimSpace(line)
+                }
+                found := false
+                for _, fn := range filenames {
+                        if lines[fn][line] {
+                                found = true
+                                break
+                        }
+                }
+                if found {
+                        continue
+                }
 
-		// add the line to the map so we don't get any duplicates from stdin
-		lines[line] = true
+                // add the line to the map so we don't get any duplicates from stdin
+                for _, fn := range filenames {
+                        lines[fn][line] = true
+                }
 
-		if !quietMode {
-			fmt.Println(line)
-		}
-		if !dryRun {
-			if fn != "" {
-				fmt.Fprintf(f, "%s\n", line)
-			}
-		}
-	}
+                if !quietMode {
+                        fmt.Println(line)
+                }
+                if !dryRun && outputWriter != nil {
+                        fmt.Fprintf(outputWriter, "%s\n", line)
+                }
+        }
 }
