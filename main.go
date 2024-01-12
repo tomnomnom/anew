@@ -20,7 +20,7 @@ func main() {
 
 	fn := flag.Arg(0)
 
-	lines := make(map[string]bool)
+	lines := make(map[string]struct{})
 
 	var f io.WriteCloser
 
@@ -32,9 +32,9 @@ func main() {
 
 			for sc.Scan() {
 				if trim {
-					lines[strings.TrimSpace(sc.Text())] = true
+					lines[strings.TrimSpace(sc.Text())] = struct{}{}
 				} else {
-					lines[sc.Text()] = true
+					lines[sc.Text()] = struct{}{}
 				}
 			}
 			r.Close()
@@ -59,12 +59,12 @@ func main() {
 		if trim {
 			line = strings.TrimSpace(line)
 		}
-		if lines[line] {
+		if _, exists := lines[line]; exists {
 			continue
 		}
 
 		// add the line to the map so we don't get any duplicates from stdin
-		lines[line] = true
+		lines[line] = struct{}{}
 
 		if !quietMode {
 			fmt.Println(line)
